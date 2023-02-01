@@ -104,9 +104,7 @@ router.post('/signup', (req, res, next) => {
 
   // forgetpassword
 router.post('/forgetpassword', (req, res, next) => {
-
-    console.log(req.body);
-  
+    //console.log(req.body);  
     db.query(
       `SELECT * FROM users WHERE email = ${db.escape(req.body.email)};`,
       (err, result) => {
