@@ -5,6 +5,7 @@ const { signupValidation, loginValidation } = require('../validation');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const UtilService = require('../../service/UtilService.js');
  
  // for login
 router.post('/login', loginValidation, (req, res, next) => {
@@ -28,15 +29,6 @@ router.post('/login', loginValidation, (req, res, next) => {
         });
       }
       const token = jwt.sign({id:result[0].id},'the-super-strong-secrect',{ expiresIn: '1h' });
-       /*    
-      return res.status(200).send({
-        msg: 'Logged in!',
-        token,
-        user: result[0]
-      });
-
-*/
-      
       // check password
       bcrypt.compare(
         req.body.password,
@@ -73,6 +65,35 @@ router.post('/login', loginValidation, (req, res, next) => {
 // Signup
 router.post('/signup', (req, res, next) => {
     console.log(req.body);
+    var m = req.body;
+    var saltRounds = 10;
+    bcrypt.hash(m.password, saltRounds)
+    .then(hashPassword => {
+    //UtilService.hashPassword(m.password).then((passwordHash) => {
+    //  console.log(passwordHash);
+  //});
+    //console.log(hashPassword);
+    db.query(`INSERT INTO emp.users(username,password,fullname,email)VALUES ('${m.username}', '${hashPassword}', '${m.fullname}', '${m.email}');`,
+            (err, result) => {
+                // user does not exists
+                if (err) {
+                throw err;
+                return res.status(400).send({
+                    msg: err
+                });
+                }
+                return res.status(200).send({
+                    msg: 'User Created',
+                    user: result[0]
+                });
+            });
+          })
+          .catch(err => {
+            return res.status(400).send({
+              msg: err
+          });
+      });
+    /*
     var hashedPassword;
     bcrypt.genSalt(10, function (err, Salt) {
     // The bcrypt is used for encrypting password.
@@ -99,7 +120,7 @@ router.post('/signup', (req, res, next) => {
                 });
             });
         });
-    });
+    });*/
 });
 
   // forgetpassword
@@ -132,26 +153,33 @@ router.post('/forgetpassword', (req, res, next) => {
 
   // resetpassword
 router.post('/resetpassword', (req, res, next) => {
-
     console.log(req.body);
-  
-    db.query(
-      `update users set password = ${req.body.password} WHERE email = ${db.escape(req.body.email)};`,
-      (err, result) => {
-        // user does not exists
-        if (err) {
-          throw err;
-          return res.status(400).send({
-            msg: err
+    var saltRounds = 10;
+    var m = req.body
+    bcrypt.hash(m.password, saltRounds)
+    .then(hashPassword => {
+      db.query(
+        `update users set password = '${hashPassword}' WHERE email = ${db.escape(m.email)};`,
+        (err, result) => {
+          // user does not exists
+          if (err) {
+            throw err;
+            return res.status(400).send({
+              msg: err
+            });
+          }
+          return res.status(200).send({
+            msg: 'Password successfully updated',
+            user: result[0]
           });
-        }
-        return res.status(200).send({
-          msg: 'Password successfully updated',
-          user: result[0]
-        });
 
-      }
-    );
+        });
+      }).catch(err => {
+        return res.status(400).send({
+          msg: err
+        });
+      });
+
   });
 
 

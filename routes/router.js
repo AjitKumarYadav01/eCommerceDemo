@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
  
  // for login
-router.post('/login', loginValidation, (req, res, next) => {
+router.post('/login2', loginValidation, (req, res, next) => {
 
   console.log(req.body);
 
